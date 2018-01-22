@@ -11,96 +11,51 @@ They source leads through various channels like search, display, email campaigns
 They now want to identify the leads' segments having a higher conversion ratio (lead to buying a product) so that they can specifically target these potential customers through additional channels and re-marketing. They have provided a partial data set for salaried customers from the last 3 months. They also capture basic details about customers. We need to identify the segment of customers with a high probability of conversion in the next 30 days.
 
 Data
-Input variables:
+###Input variables:
  
 
-ID
+|ID | Unique ID (can not be used for predictions)
 
-Unique ID (can not be used for predictions)
+| Gender | Sex of the applicant
 
-Gender
+| DOB | Date of Birth of the applicant
 
-Sex of the applicant
+| Lead_Creation_Date | Date on which Lead was created
 
-DOB
+| City_Code | Anonymised Code for the City
 
-Date of Birth of the applicant
+| City_Category | Anonymised City Feature
 
-Lead_Creation_Date
+| Employer_Code | Anonymised Code for the Employer
 
-Date on which Lead was created
+| Employer_Category1 | Anonymised Employer Feature
 
-City_Code
+| Employer_Category2 | Anonymised Employer Feature
 
-Anonymised Code for the City
+| Monthly_Income | Monthly Income in Dollars
 
-City_Category
+|Customer_Existing_Primary_Bank_Code |Anonymised Customer Bank Code
 
-Anonymised City Feature
+|Primary_Bank_Type | Anonymised Bank Feature
 
-Employer_Code
+|Contacted | Contact Verified (Y/N)
+| Source | Categorical Variable representing source of lead
 
-Anonymised Code for the Employer
+|Source_Category  Type of Source
 
-Employer_Category1
+|Existing_EMI | EMI of Existing Loans in Dollars
 
-Anonymised Employer Feature
+| Loan_Amount | Loan Amount Requested
 
-Employer_Category2
+| Loan_Period | Loan Period (Years)
 
-Anonymised Employer Feature
+| Interest_Rate | Interest Rate of Submitted Loan Amount
 
-Monthly_Income
+|EMI | EMI of Requested Loan Amount in dollars
+ 
+|Var1 | Categorical variable with multiple levels
 
-Monthly Income in Dollars
-
-Customer_Existing_Primary_Bank_Code
-
-Anonymised Customer Bank Code
-
-Primary_Bank_Type
-
-Anonymised Bank Feature
-
-Contacted
-
-Contact Verified (Y/N)
-
-Source
-
-Categorical Variable representing source of lead
-
-Source_Category
-
-Type of Source
-
-Existing_EMI
-
-EMI of Existing Loans in Dollars
-
-Loan_Amount
-
-Loan Amount Requested
-
-Loan_Period
-
-Loan Period (Years)
-
-Interest_Rate
-
-Interest Rate of Submitted Loan Amount
-
-EMI
-
-EMI of Requested Loan Amount in dollars
-
-Var1
-
-Categorical variable with multiple levels
-
-Approved
-
-(Target) Whether a loan is Approved or not (0/1)
+| Approved | (Target) Whether a loan is Approved or not (0/1)
 
  
 
