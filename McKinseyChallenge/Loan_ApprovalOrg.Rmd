@@ -1,0 +1,224 @@
+---
+title: "McKinseyHackathon"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r load}
+packages <- c("data.table", "dplyr", "MLmetrics" ,"readr")
+sapply(packages, require, character.only=TRUE, quietly=TRUE)
+
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r read}
+setwd("C:/Users/abahadur/sujata/mckinsey")
+#curPath <- file.path(getwd(), "./mckinsey")
+#X_train <- fread("./train.csv",na.strings = "", stringsAsFactors=T)
+
+X_train <- fread("./train.csv")
+
+#columns  to be removed
+#Employer_Code,Employer_Category1,Employer_Category2,City_Category,
+#May not be needed
+#Gender,Customer_Existing_Primary_Bank,Primary_Bank_Type
+hack_train <- subset( X_train , select = -c(Employer_Code,Employer_Category1,Employer_Category2,City_Category,Gender,Customer_Existing_Primary_Bank_Code,Primary_Bank_Type) )
+#head(hack_train)
+str(hack_train)
+summary(hack_train)
+rm(X_train)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r plot}
+#unique(hack_train$Primary_Bank_Type)
+#unique(hack_train$Source_Category)
+#unique(hack_train$Source)
+#pairs(hack_train)
+#hack_train$Gender=as.factor(hack_train$Gender)
+hack_train$City_Code=as.factor(hack_train$City_Code)
+hack_train$Source_Category=as.factor(hack_train$Source_Category)
+hack_train$Source=as.factor(hack_train$Source)
+hack_train$Contacted=as.factor(hack_train$Contacted)
+
+hack_train$DOB = as.Date(hack_train$DOB, "%d/%m/%y")
+hack_train$Lead_Creation_Date = as.Date(hack_train$Lead_Creation_Date, "%d/%m/%y")
+
+#hack_train$IID = as.numeric(sub('APP[A-Z]', "", hack_train$ID))
+id_train = data.table(parse_number(hack_train$ID, locale=default_locale()), hack_train$ID)
+id_train <- setNames(id_train, c("IID","ID"))
+hack_train$IID <- parse_number(hack_train$ID)
+
+hack_train$Age <- as.numeric(hack_train$Lead_Creation_Date - hack_train$DOB)
+hack_train$LCD <- as.numeric(hack_train$Lead_Creation_Date - 2000)
+hack_train <- subset( hack_train , select = -c(ID, DOB,Lead_Creation_Date) )
+hack_train_na <- filter(hack_train, !is.na(hack_train$Loan_Amount))
+#sum(hack_train$Approved == 0 && is.na(hack_train$Loan_Amount))
+#pairs(~Monthly_Income+Existing_EMI+Loan_Amount+Loan_Period+Interest_Rate+EMI+Source+Contacted+Approved,data=hack_train,na.action=na.omit)
+
+#hack_train <- subset(hack_train, select = -c(Gender) )
+
+#loan_cor = cor(hack_train)
+
+```
+```{r test}
+#unique(hack_train$Primary_Bank_Type)
+#unique(hack_train$Source_Category)
+#unique(hack_train$Source)
+#pairs(hack_train)
+X_test <- fread("./test.csv")
+
+#columns  to be removed
+#Employer_Code,Employer_Category1,Employer_Category2,City_Category,
+#May not be needed
+#Gender,Customer_Existing_Primary_Bank,Primary_Bank_Type
+hack_test <- subset( X_test , select = -c(Employer_Code,Employer_Category1,Employer_Category2,City_Category,Gender,Customer_Existing_Primary_Bank_Code,Primary_Bank_Type) )
+#hack_test$Gender=as.factor(hack_test$Gender)
+hack_test$City_Code=as.factor(hack_test$City_Code)
+hack_test$Source_Category=as.factor(hack_test$Source_Category)
+hack_test$Source=as.factor(hack_test$Source)
+hack_test$Contacted=as.factor(hack_test$Contacted)
+
+hack_test$DOB = as.Date(hack_test$DOB, "%d/%m/%y")
+hack_test$Lead_Creation_Date = as.Date(hack_test$Lead_Creation_Date, "%d/%m/%y")
+
+id_test = data.table(parse_number(hack_test$ID, locale=default_locale()), hack_test$ID)
+id_test <- setNames(id_test, c("IID","ID"))
+#hack_test$IID = as.numeric(sub('APP[A-Z]', "", hack_test$ID))
+hack_test$IID <- parse_number(hack_test$ID)
+hack_test$Age <- as.numeric(hack_test$Lead_Creation_Date - hack_test$DOB)
+hack_test$LCD <- as.numeric(hack_test$Lead_Creation_Date - 2000)
+hack_test <- subset( hack_test , select = -c(ID, DOB, Lead_Creation_Date) )
+hack_test_na <- filter(hack_test, !is.na(hack_test$Loan_Amount))
+#sum(hack_train$Approved == 0 && is.na(hack_train$Loan_Amount))
+#pairs(~Monthly_Income+Existing_EMI+Loan_Amount+Loan_Period+Interest_Rate+EMI+Source+Contacted+Approved,data=hack_train,na.action=na.omit)
+
+#hack_test <- subset(hack_test, select = -c(Gender) )
+rm(X_test)
+#loan_cor = cor(hack_train)
+
+```
+
+```{r}
+library(gbm)
+hack.boost_train=gbm(Approved~Monthly_Income+Existing_EMI+Loan_Amount+Loan_Period+Interest_Rate+EMI+Var1+LCD,data=hack_train, distribution="gaussian", n.trees=1000,interaction.depth=4)
+
+summary(hack.boost_train)
+```
+
+```{r svm}
+library(e1071)
+library(rpart)
+svm.model = svm(Approved~., data=hack_train, cost=100, gamma=0.01)
+hack_test$Approved <- NA
+#svm.pred = predict(svm.model, hack_test[,15])
+``
+
+
+
+filtered out na
+```{r xgb_na}
+library(Matrix)
+library(xgboost)
+library(caret)
+
+cvFolds <- createFolds(hack_train_na$Approved[!is.na(hack_train_na$Approved)], k=5, list=TRUE, returnTrain=FALSE)
+varnames <- setdiff(colnames(hack_train_na), c("IID", "Approved"))
+varnames <-c("Monthly_Income", "Existing_EMI", "Loan_Amount", "Loan_Period", "Interest_Rate", "EMI", "Var1", "LCD")
+train_sparse <- Matrix(as.matrix(hack_train_na[, varnames]), sparse=TRUE)
+#train_sparse <- Matrix(as.matrix(hack_train[,1:2]), sparse=TRUE)
+test_sparse <- Matrix(as.matrix(hack_test_na[, varnames]), sparse=TRUE)
+#y_train <- subset( hack_train_na , select = c(Approved) )
+y_train <- hack_train_na[!is.na("Approved"),"Approved"]
+test_ids <- subset( hack_test_na , select = c(IID) )
+#test_ids <- hack_test_na[,hack_test_na$IID]
+dtrain <- xgb.DMatrix(data=train_sparse, label=y_train)
+dtest <- xgb.DMatrix(data=test_sparse)
+param <- list(booster="gbtree",
+              objective="binary:logistic",
+#              eval_metric="logloss",
+              eta = .02,
+              gamma = 1,
+              max_depth = 6,
+              min_child_weight = 1,
+              subsample = .8,
+              colsample_bytree = .8
+)
+
+cat("Functions")
+xgb_normalizedgini <- function(preds, dtrain){
+  actual <- getinfo(dtrain, "label")
+  score <- NormalizedGini(preds,actual)
+  return(list(metric = "NormalizedGini", value = score))
+}
+
+cat("xgb cross-validation, uncomment when running locally")
+ xgb_cv <- xgb.cv(data = dtrain,
+                  params = param,
+                  nrounds = 5000,
+                  feval = xgb_normalizedgini,
+                  maximize = TRUE,
+                 prediction = TRUE,
+                  folds = cvFolds,
+                  print_every_n = 25,
+                  early_stopping_round = 30)
+best_iter <- xgb_cv$best_iteration
+
+#best_iter <- 1512
+
+cat("xgb model")
+xgb_model <- xgb.train(data = dtrain,
+                       params = param,
+                       nrounds = best_iter,
+                       feval = xgb_normalizedgini,
+                       maximize = TRUE,
+                       watchlist = list(train = dtrain),
+                       verbose = 1,
+                       print_every_n = 25
+)
+
+#xgb_model <- xgb.train(data = dtrain,
+#                       params = param,
+#                       watchlist = list(train = dtrain,test=dtest),
+#                       nrounds = best_iter,
+#                       verbose = 1,
+#                       feval = xgb_normalizedgini,
+#                       print_every_n = 100
+#)
+
+
+```
+
+
+```{r pred}
+cat("Feature importance")
+names <- dimnames(train_sparse)[[2]]
+importance_matrix <- xgb.importance(names, model=xgb_model)
+xgb.plot.importance(importance_matrix)
+
+cat("Predict and output csv")
+hack_preds <- data.table(IID=test_ids, Approved=predict(xgb_model,dtest))
+write.table(hack_preds, "submission1.csv", sep=",", dec=".", quote=FALSE, row.names=FALSE)
+merged_test <- merge(hack_preds,id_test,by.x="IID.IID", by.y="IID", all.x=TRUE)
+merged_test <- subset( merged_test , select = -c(IID.IID) )
+#submission <- filter(merged_test, !is.na(merged_test$Approved))
+#preds <- merge(sample_submission_zero[,1], preds, by="msno", all.x=T, sort=F)
+write.table(merged_test, "submission3.csv", sep=",", dec=".", quote=FALSE, row.names=FALSE)
+sample_submission_test <- fread(paste0(getwd(),"./sample_submission_v2.csv"), sep=",", na.strings = "", stringsAsFactors=T)
+
+#20000 train and 8000 test examples
+```
+
